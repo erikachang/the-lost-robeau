@@ -12,7 +12,7 @@ import jason.asSyntax.Term;
 
 import java.util.List;
 
-import lost_robot.RobeauWorldModel;
+import robeau_environment.RobeauWorldModel;
 
 public class evaluate extends DefaultInternalAction {
 

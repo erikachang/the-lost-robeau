@@ -6,12 +6,14 @@ import hmm.HiddenMarkovModel;
 import jason.asSemantics.DefaultInternalAction;
 import jason.asSemantics.TransitionSystem;
 import jason.asSemantics.Unifier;
+import jason.asSyntax.Literal;
 import jason.asSyntax.Term;
+import jason.environment.grid.Location;
 
-import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.List;
 
-import lost_robot.RobeauWorldModel;
+import robeau_environment.RobeauWorldModel;
 
 public class compute extends DefaultInternalAction {
 
@@ -26,32 +28,18 @@ public class compute extends DefaultInternalAction {
     	
     	RobeauWorldModel worldModel = RobeauWorldModel.get();
     	
-    	ArrayList<Integer> fP = worldModel.getFreePositions();
-    	int n = fP.size();
-    	double[][] o = new double[n][n];
-    	double e = worldModel.getSensorError();
-    	
-    	BitSet actual;
-    	int d;
-    	
-    	for (int i = 0; i < fP.size(); i++) {
-    		actual = worldModel.getSurroundingBlockades(fP.get(i));
-    		actual.xor(readings);
-    		
-    		d = 0;
-        	
-        	for (int j = 0; j < 4; j++) {
-        		if (actual.get(j))
-        			d++;
-        	}
-        	
-        	o[i][i] = Math.pow((1 - e), (4 - d)) * Math.pow(e, d);
-    	}
-    	
     	HiddenMarkovModel hmm = HiddenMarkovModel.get();
+    	
+    	double[][] o = hmm.generateObservationMatrix(worldModel, readings);
     	
     	hmm.doFiltering(o);
     	hmm.doSmoothing();
+    	List<Integer> fP = worldModel.getFreePositions();
+    	int mostLikelyState = fP.get(HiddenMarkovModel.argmax(hmm.getProbabilities()));
+//    	Location l = worldModel.getAgPos(0);
+//    	int mostLikelyState = RobeauWorldModel.positionAsInteger(l.x, l.y, 16);
+    	ts.getAg().delBel(Literal.parseLiteral("current_position(X)"));
+    	ts.getAg().addBel(Literal.parseLiteral("current_position(" + mostLikelyState + ")"));
     	
         return true;
     }

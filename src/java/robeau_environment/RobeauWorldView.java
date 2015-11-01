@@ -1,4 +1,4 @@
-package lost_robot;
+package robeau_environment;
 
 import jason.environment.grid.GridWorldModel;
 import jason.environment.grid.GridWorldView;
@@ -31,6 +31,12 @@ public class RobeauWorldView extends GridWorldView {
 			break;
 		case RobeauWorldModel.CIRCLE_L:
 			drawLargeCircle(g, x, y);
+			break;
+		case RobeauWorldModel.EXIT:
+			drawExit(g, x, y);
+			break;
+		case RobeauWorldModel.PRISONER:
+			drawPrisoner(g, x, y);
 			break;
 		}
 	}
@@ -78,5 +84,28 @@ public class RobeauWorldView extends GridWorldView {
 		
 		g.drawOval(posX, posY, width, height);
 		g.fillOval(posX, posY, width, height);
+	}
+	
+	public void drawPrisoner(Graphics g, int x, int y) {
+		g.setColor(Color.green);
+		
+		int width = (int)(cellSizeW * 0.75);
+		int height = (int)(cellSizeH * 0.75);
+		
+		int posX = (x*cellSizeW)+((cellSizeW/2)-(width/2));
+		int posY = (y*cellSizeH)+((cellSizeW/2)-(height/2));
+		
+		g.drawOval(posX, posY, width, height);
+		g.fillOval(posX, posY, width, height);
+	}
+	
+	public void drawExit(Graphics g, int x, int y) {
+		g.setColor(Color.red);
+		
+		int posX = (x*cellSizeW)+(cellSizeW/4);
+		int posY = (y*cellSizeH)+(cellSizeW/4); 
+		
+		g.drawRect(posX, posY, cellSizeW/2, cellSizeH/2);
+		g.fillRect(posX, posY, cellSizeW/2, cellSizeH/2);
 	}
 }

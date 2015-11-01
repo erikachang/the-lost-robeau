@@ -1,12 +1,15 @@
 package hmm;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.LinkedList;
 import java.util.List;
 
+import robeau_environment.RobeauWorldModel;
+
 public class HiddenMarkovModel {
-	private double[] prior;
-	private double[][] transitionMatrix;
+	private final double[] prior;
+	private final double[][] transitionMatrix;
 
 	private ArrayList<double[]> fVector, sVector;
 	private ArrayList<double[][]> evidences;
@@ -68,8 +71,6 @@ public class HiddenMarkovModel {
 	}
 
 	synchronized public void doFiltering(double[][] observation) {
-		
-		
 		evidences.add(observation);
 		
 		double[][] ft = MatrixOperations.product(observation, transitionMatrix);
@@ -79,6 +80,22 @@ public class HiddenMarkovModel {
 		fVector.add(f);
 		
 		time++;
+	}
+	
+	synchronized public double[] doFiltering(double[][][] observations) {
+		double[] prior = this.prior;
+		for (double[][] observation: observations) {
+			double[][] ft = MatrixOperations.product(observation, transitionMatrix);
+			prior = normalise(MatrixOperations.product(ft, prior));
+		}
+		return prior;
+	}
+	
+	synchronized public double[] doSingleFiltering(double[][] observation) {
+		double[] prior = this.prior;
+		double[][] ft = MatrixOperations.product(observation, transitionMatrix);
+		prior = normalise(MatrixOperations.product(ft, prior));
+		return prior;
 	}
 	
 	synchronized public void doSmoothing() {
@@ -108,7 +125,33 @@ public class HiddenMarkovModel {
 		return path;
 	}
 	
-	public double max(double[] list) {
+	synchronized public double[][] generateObservationMatrix(RobeauWorldModel worldModel, BitSet observation) {
+		List<Integer> fP = worldModel.getFreePositions();
+    	int n = fP.size();
+    	double[][] o = new double[n][n];
+    	double e = worldModel.getSensorError();
+    	
+    	BitSet actual;
+    	int d;
+    	
+    	for (int i = 0; i < fP.size(); i++) {
+    		actual = worldModel.getSurroundingBlockades(fP.get(i));
+    		actual.xor(observation);
+    		
+    		d = 0;
+        	
+        	for (int j = 0; j < 4; j++) {
+        		if (actual.get(j))
+        			d++;
+        	}
+        	
+        	o[i][i] = Math.pow((1 - e), (4 - d)) * Math.pow(e, d);
+    	}
+    	
+    	return o;
+	}
+	
+	public static double max(double[] list) {
 		double max = 0.0;
 		for (double d:list) {
 			if (d > max)
@@ -117,7 +160,7 @@ public class HiddenMarkovModel {
 		return max;
 	}
 	
-	public int argmax(double[] list) {
+	public static int argmax(double[] list) {
 		double max = 0.0;
 		int maxindex = 0;
 		for (int i = 0; i < list.length; i++) {
@@ -130,6 +173,6 @@ public class HiddenMarkovModel {
 	}
 
 	public double[] getProbabilities() {
-		return fVector.get(time-1);
+		return fVector.get(time);
 	}
 }

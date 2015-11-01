@@ -9,10 +9,9 @@ import jason.asSemantics.Unifier;
 import jason.asSyntax.Term;
 
 import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.HashSet;
+import java.util.List;
 
-import lost_robot.RobeauWorldModel;
+import robeau_environment.RobeauWorldModel;
 
 public class recollect extends DefaultInternalAction {
 
@@ -25,7 +24,7 @@ public class recollect extends DefaultInternalAction {
     public Object execute(TransitionSystem ts, Unifier un, Term[] args) throws Exception {        
 		RobeauWorldModel worldModel = RobeauWorldModel.get();
 		
-		ArrayList<Integer> fS = worldModel.getFreePositions();
+		List<Integer> fS = worldModel.getFreePositions();
 		int n = fS.size();
 		double p = 1/(double)n;
 		double[] p0 = new double[n];
@@ -35,7 +34,7 @@ public class recollect extends DefaultInternalAction {
 		
 		int c = 0;
 		double[][] t = new double[n][n];
-		ArrayList<Integer> neighbours;
+		List<Integer> neighbours;
 		for (int i = 0; i < n; i++) {
 			c = 0;
 			neighbours = worldModel.neighbours(fS.get(i));

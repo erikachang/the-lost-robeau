@@ -1,6 +1,7 @@
-package lost_robot;
+package robeau_environment;
 
 import jason.environment.grid.GridWorldModel;
+import jason.environment.grid.Location;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -13,6 +14,11 @@ public class RobeauWorldModel extends GridWorldModel {
 	public static final int CIRCLE_S = 64;
 	public static final int CIRCLE_M = 128;
 	public static final int CIRCLE_L = 256;
+	public static final int EXIT	 = 512;
+	public static final int PRISONER = 1024;
+	
+	private final int robeau = 0;
+	private final int[] prisoners = new int[] { 1, 2, 3 };
 	
 	private List<Integer> stateSequence;
 	
@@ -45,22 +51,22 @@ public class RobeauWorldModel extends GridWorldModel {
 	protected static RobeauWorldModel instance;
 	
 	public static RobeauWorldModel world1() {
-		instance = new RobeauWorldModel(16, 4, 1, 1);
+		instance = new RobeauWorldModel(16, 4, 4, 1);
 		return instance;
 	}
 	
 	public static RobeauWorldModel world2() {
-		instance = new RobeauWorldModel(16, 4, 1, 2);
+		instance = new RobeauWorldModel(16, 4, 4, 2);
 		return instance;
 	}
 	
 	public static RobeauWorldModel world3() {
-		instance = new RobeauWorldModel(4, 4, 1, 3);
+		instance = new RobeauWorldModel(4, 4, 4, 3);
 		return instance;
 	}
 	
 	public static RobeauWorldModel world4() {
-		instance = new RobeauWorldModel(4, 4, 1, 4);
+		instance = new RobeauWorldModel(8, 8, 4, 4);
 		return instance;
 	}
 	
@@ -89,80 +95,78 @@ public class RobeauWorldModel extends GridWorldModel {
 		return sensorError;
 	}
 
-	synchronized public boolean move(int agentId, String direction) {
+	synchronized public boolean move(int agentId, Direction direction) {
 		int agX = agPos[agentId].x;
 		int agY = agPos[agentId].y;
 		
-		if (direction.equals("north")) {
-			if (this.isFreeOfObstacle(agX, agY-1)) {
-				this.setAgPos(0, this.agPos[0].x, this.agPos[0].y-1);
+		if (direction.equals(Direction.NORTH)) {
+			if (isFreeOfObstacle(agX, agY-1)) {
+				setAgPos(agentId, agPos[0].x, agPos[0].y-1);
 			} else {
 				return false;
 			}
-		} else if (direction.equals("east")) {
-			if (this.isFreeOfObstacle(agX+1, agY)) {
-				this.setAgPos(0, this.agPos[0].x+1, this.agPos[0].y);
+		} else if (direction.equals(Direction.EAST)) {
+			if (isFreeOfObstacle(agX+1, agY)) {
+				setAgPos(agentId, agPos[0].x+1, agPos[0].y);
 			} else {
 				return false;
 			}
-		} else if (direction.equals("west")) {
-			if (this.isFreeOfObstacle(agX-1, agY)) {
-				this.setAgPos(0, this.agPos[0].x-1, this.agPos[0].y);
+		} else if (direction.equals(Direction.WEST)) {
+			if (isFreeOfObstacle(agX-1, agY)) {
+				setAgPos(agentId, agPos[0].x-1, agPos[0].y);
 			} else {
 				return false;
 			}
-		} else if (direction.equals("south")) {
-			if (this.isFreeOfObstacle(agX, agY+1)) {
-				this.setAgPos(0, this.agPos[0].x, this.agPos[0].y+1);
+		} else if (direction.equals(Direction.SOUTH)) {
+			if (isFreeOfObstacle(agX, agY+1)) {
+				setAgPos(agentId, agPos[0].x, agPos[0].y+1);
 			} else {
 				return false;
 			}
 		}
-		
 		return true;
 	}
 	
-	public ArrayList<Integer> neighbours(int s) {
-		ArrayList<Integer> neighbours = new ArrayList<Integer>();
-		
+	public List<Integer> neighbours(int s) {
+		List<Integer> neighbours = new LinkedList<Integer>();
+		Location l;
 		if (s % width >= 0 && s % width < (width-1)) {
-			int[] coords = positionFromInteger(s+1, width);
-			if (isFreeOfObstacle(coords[0], coords[1]))
+			l = locationFromInteger(s+1, width);
+			if (isFreeOfObstacle(l.x, l.y))
 				neighbours.add(s+1);
 		}
 		if (s % width > 0 && s % width < width) {
-			int[] coords = positionFromInteger(s-1, width);
-			if (isFreeOfObstacle(coords[0], coords[1]))
+			l = locationFromInteger(s-1, width);
+			if (isFreeOfObstacle(l.x, l.y))
 				neighbours.add(s-1);
 		}
 		if (s - width >= 0) {
-			int[] coords = positionFromInteger(s-width, width);
-			if (isFreeOfObstacle(coords[0], coords[1]))
+			l = locationFromInteger(s-width, width);
+			if (isFreeOfObstacle(l.x, l.y))
 				neighbours.add(s-width);
 		}
 		if (s + width < (width*height)) {
-			int[] coords = positionFromInteger(s+width, width);
-			if (isFreeOfObstacle(coords[0], coords[1]))
+			l = locationFromInteger(s+width, width);
+			if (isFreeOfObstacle(l.x, l.y))
 				neighbours.add(s+width);
 		}
-		
 		return neighbours;
 	}
 	
 	public BitSet getSurroundingBlockades(int i) {
-		int[] coords = positionFromInteger(i, width);
+		Location l = locationFromInteger(i, width);
 		BitSet readings = new BitSet(4);
 		
-		if (!isFreeOfObstacle(coords[0], coords[1]-1)) {
+		if (!isFreeOfObstacle(l.x, l.y-1)) {
 			readings.set(0);
 		}
-		if (!isFreeOfObstacle(coords[0]+1, coords[1])) {
+		if (!isFreeOfObstacle(l.x+1, l.y)) {
 			readings.set(1);
 		}
-		if (!isFreeOfObstacle(coords[0]-1, coords[1])) {
+		if (!isFreeOfObstacle(l.x-1, l.y)) {
 			readings.set(2);
 		}
-		if (!isFreeOfObstacle(coords[0], coords[1]+1)) {
+		if (!isFreeOfObstacle(l.x, l.y+1)) {
 			readings.set(3);
 		}
 		
@@ -170,25 +174,45 @@ public class RobeauWorldModel extends GridWorldModel {
 	}
 	
 	public BitSet getSurroundingBlockades (int x, int y) {
-		return getSurroundingBlockades(positionAsInteger(x, y, width));
+		return getSurroundingBlockades(integerPosition(x, y, width));
 	}
 	
-	public ArrayList<Integer> getFreePositions() {
-		ArrayList<Integer> freeSquares = new ArrayList<Integer>();
+	public List<Integer> getFreePositions() {
+		List<Integer> freeSquares = new LinkedList<Integer>();
 		
 		for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
 				if (isFreeOfObstacle(j, i))
-					freeSquares.add(positionAsInteger(j, i, this.getWidth()));
+					freeSquares.add(integerPosition(j, i, this.getWidth()));
 			}
 		}
 		
 		return freeSquares;
 	}
+	
+	public void drawMatrix(ArrayList<double[]> matrix) {		
+		for (double[] m: matrix) {
+			int x = (int) m[0];
+			int y = (int) m[1];
+			double prob = m[2];
+			
+			if (this.hasObject(EXIT, x, y))
+				continue;
+			
+			if ((prob) < 0.001 ) {
+				set(CIRCLE_T, x, y);
+			} else if (prob < 0.05) {
+				set(CIRCLE_S, x, y);
+			} else if (prob < 0.15) {
+				set(CIRCLE_M, x, y);
+			} else {
+				set(CIRCLE_L, x, y);
+			}
+		}
+	}
 		
 	public void drawDot(int x, int y, double prob) {
 		set(CLEAN, x, y);
-//		add(AGENT, getAgPos(0));
 		
 		if ((prob) < 0.001 ) {
 			add(CIRCLE_T, x, y);
@@ -201,27 +225,44 @@ public class RobeauWorldModel extends GridWorldModel {
 		}
 	}
 	
-	public static int[] positionFromInteger(int x, int w) {
-		int[] coords = new int[2];
-		
-		coords[0] = x % w;
-		coords[1] = x / w;
-		
-		return coords;
+	public static Location locationFromInteger(int i, int w) {
+		int x = i % w;
+		int y = i / w;
+		return new Location(x, y);
 	}
 	
-	public static int positionAsInteger(int x, int y, int w) {
-		int pos = 0;
-		
-		pos += (y * w) + x;
-		
-		return pos;
+	public static int integerPosition(int x, int y, int w) {
+		return (y * w) + x;
+	}
+	
+	public static int integerPosition(Location l, int w) {
+		return integerPosition(l.x, l.y, w);
+	}
+	
+	public List<Integer> prisonersAt(Location l) {
+		List<Integer> lPrisoners = new LinkedList<Integer>();
+		for (int prisoner: prisoners) {
+			if (prisoner < 0) continue;
+			if (getAgPos(prisoner).equals(l))
+				lPrisoners.add(prisoner);
+		}
+		return lPrisoners;
+	}
+	
+	public boolean hasPrisonerIn(Location l) {
+		for (int prisoner: prisoners) {
+			if (prisoner < 0) continue;
+			if (getAgPos(prisoner).equals(l))
+				return true;
+		}
+		return false;
 	}
 	
 	@Override
 	public void setAgPos(int agId, int x, int y) {
 		super.setAgPos(agId, x, y);
-		stateSequence.add(positionAsInteger(x, y, width));
+		if (agId == robeau)
+			stateSequence.add(integerPosition(x, y, width));
 	}
 	
 	private void map1() {
@@ -259,25 +300,15 @@ public class RobeauWorldModel extends GridWorldModel {
 		
 		add(OBSTACLE, 15, 1);
 		
-		setAgPos(0, 0, 0);
-		
+		add(EXIT, 15, 2);
+
+		setAgPos(robeau, 0, 0);
+		setAgPos(prisoners[0], 0, 3);
+		setAgPos(prisoners[1], 10, 1);
+		setAgPos(prisoners[2], 7, 3);
 	}
 	
-	private void map2() {
-//		boolean alt = true;
-//		for (int i = 1; i < width; i+=2) {
-//			if (alt) {
-//				add(OBSTACLE, i, 0);
-//				add(OBSTACLE, i, 1);
-//				add(OBSTACLE, i, 2);
-//			} else {
-//				add(OBSTACLE, i, 1);
-//				add(OBSTACLE, i, 2);
-//				add(OBSTACLE, i, 3);
-//			}
-//			alt = !alt;
-//		}
-		
+	private void map2() {		
 		for (int i = 0; i < 4; i++) {
 			add(OBSTACLE, (i*height)+0, 1);
 			add(OBSTACLE, (i*height)+0, 2);
@@ -289,7 +320,10 @@ public class RobeauWorldModel extends GridWorldModel {
 			add(OBSTACLE, (i*height)+3, 1);
 		}
 		
-		setAgPos(0, 0, 0);
+		setAgPos(robeau, 0, 0);
+		setAgPos(prisoners[0], 0, 3);
+		setAgPos(prisoners[1], 4, 0);
+		setAgPos(prisoners[2], 15, 3);
 	}
 	
 	private void map3() {
@@ -300,10 +334,16 @@ public class RobeauWorldModel extends GridWorldModel {
 		add(OBSTACLE, 3, 1);
 		
 		setAgPos(0, 0, 0);
+		setAgPos(prisoners[0], 0, 3);
+		setAgPos(prisoners[1], 3, 3);
+		setAgPos(prisoners[2], 3, 0);
 	}
 	
 	private void map4() {	
-		setAgPos(0, 2, 2);
+		setAgPos(0, 4, 4);
+		setAgPos(prisoners[0], 0, 0);
+		setAgPos(prisoners[1], 0, 7);
+		setAgPos(prisoners[2], 7, 7);
 	}
 	
 	private void map5() {
@@ -343,43 +383,9 @@ public class RobeauWorldModel extends GridWorldModel {
 		
 		setAgPos(0, 0, 0);
 	}
-	
-//	private void map5() {
-//		add(OBSTACLE, 1, 1);
-//		add(OBSTACLE, 2, 1);
-////		add(OBSTACLE, 3, 1);
-//		add(OBSTACLE, 4, 1);
-//		add(OBSTACLE, 5, 1);
-//		add(OBSTACLE, 6, 1);
-//		
-//		add(OBSTACLE, 1, 2);
-//		add(OBSTACLE, 4, 2);
-//		
-//		add(OBSTACLE, 1, 3);
-//		add(OBSTACLE, 2, 3);
-//		add(OBSTACLE, 3, 3);
-//		add(OBSTACLE, 4, 3);
-//		add(OBSTACLE, 5, 3);
-//		
-//		add(OBSTACLE, 1, 4);
-//		add(OBSTACLE, 3, 4);
-//		add(OBSTACLE, 4, 4);
-//		add(OBSTACLE, 6, 4);
-//		
-//		add(OBSTACLE, 3, 5);
-////		add(OBSTACLE, 4, 5);
-//		
-//		add(OBSTACLE, 1, 6);
-//		add(OBSTACLE, 2, 6);
-//		add(OBSTACLE, 3, 6);
-////		add(OBSTACLE, 4, 6);
-//		add(OBSTACLE, 5, 6);
-//		add(OBSTACLE, 6, 6);
-//		
-//		add(OBSTACLE, 7, 7);
-//		
-//		setAgPos(0, 0, 0);
-//		
-////		view.setSize(800, 800);
-//	}
+
+	public void setPrisonerFree(Integer i) {
+		prisoners[i-1] = -1;
+		
+	}
 }

@@ -2,10 +2,10 @@ MAS lost_robot {
 
 	infrastructure: Centralised
 
-	environment: lost_robot.RobeauEnvironment
+	environment: robeau_environment.RobeauEnvironment
 
 	agents:
-		observer;
+		prisoner_unit #3;
 		monsieur_robeau;
 
 	aslSourcePath:
