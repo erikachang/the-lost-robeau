@@ -1,0 +1,13 @@
+MAS lost_robot {
+
+	infrastructure: Centralised
+
+	environment: lost_robot.RobeauEnvironment
+
+	agents:
+		observer;
+		monsieur_robeau;
+
+	aslSourcePath:
+		"src/asl";
+}
