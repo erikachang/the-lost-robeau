@@ -1,6 +1,5 @@
-# The Lost Robeau
+# Robeau Hero
 
-This is a small project I did as a coursework for a Computation Intelligence course using Jason agents and Hidden Markov Models. 
-The scenario is based on the lost robot featured in Russel and Norvig's "Artificial Intelligence: A Modern Approach".
+This is an extension to "The Lost Robeau" project, in which there are prisoners in a maze and Robeau must rescue them.
 
-I'm uploading it just so I'll have a backup of it, as I realise this is not the sexiest code ever written.
+Once again, I'm uploading it just so I'll have a backup of it, as I realise this is not the sexiest code ever written.
